@@ -27,3 +27,5 @@ log4j = {
 grails.plugins.springsecurity.userLookup.userDomainClassName = 'com.example.User'
 grails.plugins.springsecurity.userLookup.authorityJoinClassName = 'com.example.UserRole'
 grails.plugins.springsecurity.authority.className = 'com.example.Role'
+grails.plugins.springsecurity.dao.reflectionSaltSourceProperty = "username"
+
