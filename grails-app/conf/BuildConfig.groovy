@@ -21,5 +21,10 @@ grails.project.dependency.resolution = {
                 ":release:1.0.1") {
             export = false
         }
+
+        compile(":webxml:[1.4.1,)")
+        compile(":spring-security-core:1.2.7.2") {
+            export = false
+        }
     }
 }
