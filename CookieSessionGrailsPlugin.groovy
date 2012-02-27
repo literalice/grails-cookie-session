@@ -9,7 +9,10 @@ class CookieSessionGrailsPlugin {
     def loadAfter = ["logging"]
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
-        "grails-app/views/error.gsp"
+        "grails-app/views/**/*",
+        "grails-app/controllers**/*",
+        "grails-app/domain/com/example/**/*",
+        "web-app/**/*",
     ]
 
     // TODO Fill in these fields
