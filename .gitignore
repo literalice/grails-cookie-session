@@ -1,0 +1,15 @@
+/.settings
+/cobertura.ser
+stacktrace.log
+/plugin.xml
+/target
+/out
+/web-app/WEB-INF/classes
+
+/*.zip
+/*.zip.sha1
+*.class
+/.idea
+*.iml
+*.ipr
+*.iws
