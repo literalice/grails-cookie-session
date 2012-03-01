@@ -16,15 +16,10 @@ grails.project.dependency.resolution = {
     }
 
     plugins {
-        build(":tomcat:$grailsVersion",
-                ":svn:1.0.2",
-                ":release:1.0.1") {
+        build(":svn:1.0.2", ":release:1.0.1") {
             export = false
         }
 
-        compile(":webxml:[1.4.1,)")
-        compile(":hibernate:$grailsVersion", ":spring-security-core:1.2.7.2") {
-            export = false
-        }
+        compile(":webxml:1.4.1")
     }
 }
