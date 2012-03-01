@@ -1,21 +1,12 @@
 package com.monochromeroad.grails.plugins.cookiesession;
 
-import org.apache.commons.codec.binary.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.servlet.ServletContext;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * Cookie Session
@@ -43,30 +34,22 @@ public class CookieSession  implements HttpSession, Serializable {
         }
     };
 
-    private transient Logger log = LoggerFactory.getLogger(getClass());
+    transient SessionRepository repository;
 
-    private transient String name;
+    long creationTime;
 
-    private long creationTime;
+    long lastAccessedTime;
 
-    private long lastAccessedTime;
-
-    private boolean valid;
+    boolean valid;
 
     /** the time for Session Timeout */
-    private transient int maxInactiveInterval = 30 * 60;
+    transient int maxInactiveInterval = 30 * 60;
 
-    private transient ServletContext servletContext;
+    transient ServletContext servletContext;
 
-    private transient HttpServletRequest servletRequest;
+    transient boolean newSession;
 
-    private transient HttpServletResponse servletResponse;
-
-    private transient ClassLoader classLoader;
-
-    private transient boolean newSession;
-
-    private Map<String, Serializable> attributes;
+    Map<String, Serializable> attributes;
 
     public CookieSession() {
         this.creationTime = System.currentTimeMillis();
@@ -76,16 +59,9 @@ public class CookieSession  implements HttpSession, Serializable {
         this.valid = true;
     }
 
-    public CookieSession(
-            String name, ServletContext context,
-            HttpServletRequest request, HttpServletResponse response,  ClassLoader classLoader) {
+    public CookieSession(SessionRepository repository) {
         this();
-        this.name = name;
-        this.servletContext = context;
-        this.servletRequest = request;
-        this.servletResponse = response;
-        this.classLoader = classLoader;
-        load();
+        this.repository = repository;
     }
 
     @Override
@@ -101,7 +77,7 @@ public class CookieSession  implements HttpSession, Serializable {
      */
     @Override
     public String getId() {
-        return name;
+        return "-";
     }
 
     @Override
@@ -190,7 +166,7 @@ public class CookieSession  implements HttpSession, Serializable {
         }
 
         attributes.put(s, validValue);
-        save();
+        repository.save(this);
     }
 
     @Override
@@ -202,7 +178,7 @@ public class CookieSession  implements HttpSession, Serializable {
     public void removeAttribute(String s) {
         if (attributes.containsKey(s)) {
             attributes.remove(s);
-            save();
+            repository.save(this);
         }
     }
 
@@ -215,7 +191,7 @@ public class CookieSession  implements HttpSession, Serializable {
     public void invalidate() {
         this.valid = false;
         this.attributes.clear();
-        delete();
+        repository.delete();
     }
 
     @Override
@@ -227,108 +203,6 @@ public class CookieSession  implements HttpSession, Serializable {
         return valid && !isSessionTimeout();
     }
 
-    void delete() {
-        Cookie sessionCookie = createCookie();
-        sessionCookie.setMaxAge(0); // Delete
-        servletResponse.addCookie(sessionCookie);
-    }
-
-    private void save() {
-        String sessionString = convertToString();
-        Cookie sessionCookie = createCookie();
-        sessionCookie.setValue(sessionString);
-        servletResponse.addCookie(sessionCookie);
-    }
-
-    private String convertToString() {
-        try {
-            ByteArrayOutputStream byteArrayOut = new ByteArrayOutputStream();
-            OutputStream compressOut = new GZIPOutputStream(byteArrayOut);
-            ObjectOutputStream objectOut = new ObjectOutputStream(compressOut);
-            try {
-                objectOut.writeObject(this);
-                objectOut.flush();
-            } finally {
-                objectOut.close();
-            }
-            return encode(byteArrayOut.toByteArray());
-        } catch (final IOException e) {
-            log.error("Cannot serialize a session.", e);
-            return "-";
-        }
-    }
-
-    private String encode(final byte[] serializedBytes) {
-        return new Base64(-1, null, true).encodeToString(serializedBytes);
-    }
-
-    private void load() {
-        Cookie cookie = findCookie();
-        if (cookie == null) {
-            return;
-        }
-
-        CookieSession cookieSession = readCookieSession(cookie);
-        this.creationTime = cookieSession.creationTime;
-        this.lastAccessedTime = cookieSession.lastAccessedTime;
-        this.attributes = cookieSession.attributes;
-        this.newSession = false;
-    }
-
-    private CookieSession readCookieSession(Cookie cookie) {
-        ObjectInputStream objectIn = getCookieSessionInputStream(cookie);
-        CookieSession result = null;
-        try {
-            result = (CookieSession) objectIn.readObject();
-        } catch (IOException e) {
-            log.warn("exception on reading a cookie session", e);
-        } catch (ClassNotFoundException e) {
-            log.warn("exception on reading a cookie session", e);
-        }
-        if (result != null && result.isSessionTimeout()) {
-            return result;
-        } else {
-            return null;
-        }
-    }
-
-    private ObjectInputStream getCookieSessionInputStream(Cookie sessionCookie) {
-        String encoded = sessionCookie.getValue();
-        byte[] decoded = decode(encoded);
-        try {
-            InputStream loadingStream = new GZIPInputStream(new ByteArrayInputStream(decoded));
-            return new ObjectInputStream(loadingStream) {
-                @Override
-                public Class resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
-                    //noinspection GroovyUnusedCatchParameter
-                    try {
-                        return classLoader.loadClass(desc.getName());
-                    } catch (ClassNotFoundException ex) {
-                        return Class.forName(desc.getName());
-                    }
-                }
-            };
-        } catch (final ClassCastException e) {
-            log.warn("exception on loading a cookie session", e);
-        } catch (final IOException e) {
-            log.warn("exception on loading a cookie session", e);
-        }
-        return null;
-    }
-
-    private Cookie findCookie() {
-        Cookie[] cookies = servletRequest.getCookies();
-        if (cookies == null) return null;
-        for (final Cookie cookie : cookies) {
-            if (cookie.getName().equals(name)) return cookie;
-        }
-        return null;
-    }
-
-    private byte[] decode(final String sessionData) {
-        return Base64.decodeBase64(sessionData);
-    }
-
     private boolean isSessionTimeout() {
         if (maxInactiveInterval < 0) {
             return false;
@@ -338,11 +212,5 @@ public class CookieSession  implements HttpSession, Serializable {
         return timeout - maxInactiveInterval * 1000 > 0;
     }
 
-    private Cookie createCookie() {
-        final Cookie result = new Cookie(name, "-");
-        result.setDomain(servletRequest.getServerName()); // TODO needs config option
-        result.setPath("/");
-        return result;
-    }
 }
 

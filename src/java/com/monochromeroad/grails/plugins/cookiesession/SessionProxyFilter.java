@@ -18,8 +18,6 @@ public class SessionProxyFilter extends OncePerRequestFilter {
 
     private GrailsApplication grailsApplication;
 
-    protected String applicationName = "cookie_session";
-
     @SuppressWarnings("UnusedDeclaration") // For Spring
     public void setGrailsApplication(GrailsApplication grailsApplication) {
         this.grailsApplication = grailsApplication;
@@ -35,11 +33,14 @@ public class SessionProxyFilter extends OncePerRequestFilter {
 
     private class CookieSessionRequestWrapper extends HttpServletRequestWrapper {
 
-        private HttpServletResponse response;
+        private SessionRepository repository;
+
+        private CookieSession cookieSession;
 
         public CookieSessionRequestWrapper(HttpServletRequest request, HttpServletResponse response) {
             super(request);
-            this.response = response;
+            SessionSerializer serializer = new SessionSerializer(grailsApplication);
+            this.repository = new SessionRepository(request, response, serializer);
         }
 
         @Override
@@ -49,13 +50,17 @@ public class SessionProxyFilter extends OncePerRequestFilter {
 
         @Override
         public HttpSession getSession(final boolean create) {
-            CookieSession cookieSession = new CookieSession(
-                    applicationName, getServletContext(),(HttpServletRequest)getRequest(), response, grailsApplication.getClassLoader());
-            if (cookieSession.isNew() && !create) {
-                cookieSession.invalidate();
-                return null;
+            if (this.cookieSession != null) {
+                return this.cookieSession;
             }
-            return cookieSession;
+
+            this.cookieSession = repository.find();
+            if (this.cookieSession == null) {
+                if (create) {
+                    this.cookieSession = new CookieSession(repository);
+                }
+            }
+            return this.cookieSession;
         }
 
     }
