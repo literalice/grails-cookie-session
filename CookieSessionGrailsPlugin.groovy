@@ -1,21 +1,13 @@
+import org.springframework.web.filter.DelegatingFilterProxy
+import grails.util.Environment
+import com.monochromeroad.grails.plugins.cookiesession.SessionProxyFilter
+
 class CookieSessionGrailsPlugin {
     // the plugin version
     def version = "0.1"
     // the version or versions of Grails the plugin is designed for
-    def grailsVersion = "1.3.3 > *"
-    // the other plugins this plugin depends on
-    def dependsOn = [:]
+    def grailsVersion = "1.2.4 > *"
 
-    def loadAfter = ["logging"]
-    // resources that are excluded from plugin packaging
-    def pluginExcludes = [
-        "grails-app/views/**/*",
-        "grails-app/controllers**/*",
-        "grails-app/domain/com/example/**/*",
-        "web-app/**/*",
-    ]
-
-    // TODO Fill in these fields
     def title = "Cookie Session Plugin" // Headline display name of the plugin
     def author = "Masatoshi Hayashi"
     def authorEmail = "literalice@monochromeroad.com"
@@ -29,46 +21,57 @@ class CookieSessionGrailsPlugin {
     // License: one of 'APACHE', 'GPL2', 'GPL3'
     def license = "APACHE"
 
-    // Details of company behind the plugin (if there is one)
-//    def organization = [ name: "My Company", url: "http://www.my-company.com/" ]
-
-    // Any additional developers beyond the author specified above.
-//    def developers = [ [ name: "Joe Bloggs", email: "joe@bloggs.net" ]]
-
-    // Location of the plugin's issue tracker.
-//    def issueManagement = [ system: "JIRA", url: "http://jira.grails.org/browse/GPMYPLUGIN" ]
-
     // Online location of the plugin's browseable source code.
     def scm = [url: 'https://github.com/literalice/grails-cookie-session']
 
+    def getWebXmlFilterOrder() {
+        // make sure the filter is first
+        [sessionProxyFilter: -100]
+    }
+
     def doWithWebDescriptor = { xml ->
-        // TODO Implement additions to web.xml (optional), this event occurs before
+        if (!isEnabled(application.config)) {
+            return
+        }
+
+        // add the filter after the last context-param
+        def contextParam = xml.'context-param'
+
+        contextParam[contextParam.size() - 1] + {
+            'filter' {
+                'filter-name'('sessionProxyFilter')
+                'filter-class'(DelegatingFilterProxy.name)
+            }
+        }
+
+        def filter = xml.'filter'
+        filter[filter.size() - 1] + {
+            'filter-mapping' {
+                'filter-name'('sessionProxyFilter')
+                'url-pattern'('/*')
+                'dispatcher'('ERROR')
+                'dispatcher'('FORWARD')
+                'dispatcher'('REQUEST')
+            }
+        }
     }
 
     def doWithSpring = {
-        // TODO Implement runtime spring config (optional)
+        if (!isEnabled(application.config)) {
+            return
+        }
+
+        sessionProxyFilter(SessionProxyFilter) {
+            grailsApplication = ref("grailsApplication")
+        }
     }
 
-    def doWithDynamicMethods = { ctx ->
-        // TODO Implement registering dynamic methods to classes (optional)
+    private boolean isEnabled(config) {
+        def enabled = config.grails.plugin.cookiesession.enabled
+        if (enabled instanceof Boolean) {
+            return enabled
+        }
+        return !Environment.isDevelopmentMode()
     }
 
-    def doWithApplicationContext = { applicationContext ->
-        // TODO Implement post initialization spring config (optional)
-    }
-
-    def onChange = { event ->
-        // TODO Implement code that is executed when any artefact that this plugin is
-        // watching is modified and reloaded. The event contains: event.source,
-        // event.application, event.manager, event.ctx, and event.plugin.
-    }
-
-    def onConfigChange = { event ->
-        // TODO Implement code that is executed when the project configuration changes.
-        // The event is the same as for 'onChange'.
-    }
-
-    def onShutdown = { event ->
-        // TODO Implement code that is executed when the application shuts down (optional)
-    }
 }
