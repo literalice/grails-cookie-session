@@ -64,7 +64,6 @@ public class CookieSession  implements HttpSession, Serializable {
         this.repository = repository;
     }
 
-    @Override
     public long getCreationTime() {
         return creationTime;
     }
@@ -75,38 +74,31 @@ public class CookieSession  implements HttpSession, Serializable {
      *
      * @return a dummy id
      */
-    @Override
     public String getId() {
         return "-";
     }
 
-    @Override
     public long getLastAccessedTime() {
         return lastAccessedTime;
     }
 
-    @Override
     public ServletContext getServletContext() {
         return servletContext;
     }
 
-    @Override
     public void setMaxInactiveInterval(int maxInactiveInterval) {
         this.maxInactiveInterval = maxInactiveInterval;
     }
 
-    @Override
     public int getMaxInactiveInterval() {
         return maxInactiveInterval;
     }
 
     @SuppressWarnings("deprecation") // For Servlet API Spec
-    @Override
     public javax.servlet.http.HttpSessionContext getSessionContext() {
         return SESSION_CONTEXT;
     }
 
-    @Override
     public Object getAttribute(String s) {
         if (!isValidSession()) {
             return null;
@@ -115,12 +107,10 @@ public class CookieSession  implements HttpSession, Serializable {
         return this.attributes.get(s);
     }
 
-    @Override
     public Object getValue(String s) {
         return getAttribute(s);
     }
 
-    @Override
     public Enumeration getAttributeNames() {
         Map<String, Serializable> currentAttributes = new HashMap<String, Serializable>();
         if (isValidSession()) {
@@ -128,14 +118,11 @@ public class CookieSession  implements HttpSession, Serializable {
         }
         final Iterator<String> names = currentAttributes.keySet().iterator();
         return new Enumeration<String>() {
-            @Override
             public boolean hasMoreElements() {return names.hasNext();}
-            @Override
             public String nextElement() {return names.next();}
         };
     }
 
-    @Override
     public String[] getValueNames() {
         Map<String, Serializable> currentAttributes = new HashMap<String, Serializable>();
         if (isValidSession()) {
@@ -149,7 +136,6 @@ public class CookieSession  implements HttpSession, Serializable {
      * @param s a value name
      * @param o It should be serializable.
      */
-    @Override
     public void setAttribute(String s, Object o) {
         if (s == null) {
             throw new IllegalArgumentException("Session's key should not be null.");
@@ -169,12 +155,10 @@ public class CookieSession  implements HttpSession, Serializable {
         repository.save(this);
     }
 
-    @Override
     public void putValue(String s, Object o) {
         setAttribute(s, o);
     }
 
-    @Override
     public void removeAttribute(String s) {
         if (attributes.containsKey(s)) {
             attributes.remove(s);
@@ -182,19 +166,16 @@ public class CookieSession  implements HttpSession, Serializable {
         }
     }
 
-    @Override
     public void removeValue(String s) {
         removeAttribute(s);
     }
 
-    @Override
     public void invalidate() {
         this.valid = false;
         this.attributes.clear();
         repository.delete();
     }
 
-    @Override
     public boolean isNew() {
         return newSession;
     }
