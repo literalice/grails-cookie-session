@@ -6,6 +6,17 @@ This is the grails plugin that allows you to store session data in cookie like R
 
 Clone the plugin's source, and use it as a grails inline plugin.
 
+# Issues
+
+## Replay attacks
+
+You should be aware of the replay attacks when you use the cookie based session store.
+Even if someone sniffs a user's cookie, and replay the cookie to your application, the application cannot detect this. (they may log in to your application or ...).
+
+## Session data size
+
+All the session data will be stored in a cookie data. so the size must be up to 4kb.
+
 # Configuration
 
 The plugin can be configured in "Config.groovy".
