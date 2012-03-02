@@ -1,4 +1,4 @@
-# The cookie based session storage for Grails.
+# The cookie based session storage for Grails
 
 This is the grails plugin that allows you to store the session data in a cookie like Rails or Play!.
 
