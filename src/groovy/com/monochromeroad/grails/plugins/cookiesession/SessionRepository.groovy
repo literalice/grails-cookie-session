@@ -1,28 +1,27 @@
 package com.monochromeroad.grails.plugins.cookiesession
 
-import javax.crypto.SecretKey;
+import javax.crypto.SecretKey
 import javax.servlet.http.Cookie
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import org.apache.commons.codec.binary.Base64
 import javax.crypto.spec.SecretKeySpec
 import javax.crypto.Mac
 
+import org.apache.commons.codec.binary.Base64
+
 /**
- * Created with IntelliJ IDEA.
- * User: masatoshi
- * Date: 12/03/02
- * Time: 3:30
- * To change this template use File | Settings | File Templates.
+ * Session Cookie Repository
+ *
+ * @author Masatoshi Hayashi
  */
 class SessionRepository {
 
-    private static final String DEFAULT_HMAC_ALGORITHM = "HmacSHA1";
-
     /** HMAC SecretKey for detecting interpolate */
-    private SecretKey hmacSecretKey;
+    SecretKey hmacSecretKey
 
-    String key = "session-cookie"
+    String key
+
+    String hmacKey
 
     HttpServletRequest request
 
@@ -30,18 +29,24 @@ class SessionRepository {
 
     SessionSerializer serializer
 
-    SessionRepository(HttpServletRequest request, HttpServletResponse response, SessionSerializer serializer) {
+    SessionRepository(String key,
+            HttpServletRequest request, HttpServletResponse response,
+            SessionSerializer serializer, Map hmacOption) {
+        this.key = key
+
         this.request = request
         this.response = response
         this.serializer = serializer
 
-        final String base64EncodedHmacSecretKey = ""
-        hmacSecretKey = createSecretKey(DEFAULT_HMAC_ALGORITHM, base64EncodedHmacSecretKey)
+        hmacKey = hmacOption["id"]
+        String hmacAlgorithm = hmacOption["algorithm"]
+        String hmacSecret = hmacOption["secret"]
+        hmacSecretKey = createSecretKey(hmacAlgorithm, hmacSecret)
     }
 
     CookieSession find() {
         Cookie sessionCookie = findCookie(key)
-        Cookie hmacCookie = findCookie(key + "_hmac")
+        Cookie hmacCookie = findCookie(hmacKey)
         if (sessionCookie && hmacCookie) {
             if (!isValidHmac(sessionCookie.value, hmacCookie.value)) {
                 delete()
@@ -60,29 +65,30 @@ class SessionRepository {
     }
 
     void save(CookieSession session) {
-        String serialized = serializer.serialize(session)
-        Cookie cookie = createCookie(key)
-        cookie.setValue(serialized)
-        response.addCookie(cookie)
-        Cookie hmacCookie = createCookie(key + "_hmac")
-        hmacCookie.setValue(encode(calculateHmac(serialized)))
-        response.addCookie(hmacCookie)
+        if (session) {
+            String serialized = serializer.serialize(session)
+            Cookie cookie = createCookie(key)
+            cookie.setValue(serialized)
+            response.addCookie(cookie)
+            Cookie hmacCookie = createCookie(hmacKey)
+            hmacCookie.setValue(encode(calculateHmac(serialized)))
+            response.addCookie(hmacCookie)
+        }
     }
 
     void delete() {
-        Cookie sessionCookie = createCookie(key);
-        sessionCookie.setMaxAge(0); // Delete
-        response.addCookie(sessionCookie);
-        Cookie hmacCookie = createCookie(key + "_hmac");
-        hmacCookie.setMaxAge(0); // Delete
-        response.addCookie(hmacCookie);
+        Cookie sessionCookie = createCookie(key)
+        sessionCookie.setMaxAge(0) // Delete
+        response.addCookie(sessionCookie)
+        Cookie hmacCookie = createCookie(hmacKey)
+        hmacCookie.setMaxAge(0)// Delete
+        response.addCookie(hmacCookie)
     }
 
     private Cookie createCookie(String key) {
-        final Cookie result = new Cookie(key, "-");
-        result.setDomain(request.getServerName()); // TODO needs config option
-        result.setPath("/");
-        return result;
+        Cookie result = new Cookie(key, "")
+        result.setPath("/")
+        return result
     }
 
     private Cookie findCookie(key) {
@@ -99,27 +105,33 @@ class SessionRepository {
     }
 
     private byte[] calculateHmac(final String value) {
-        final Mac mac = Mac.getInstance(hmacSecretKey.getAlgorithm());
-        mac.init(hmacSecretKey);
-        return mac.doFinal(value.getBytes());
+        Mac mac = Mac.getInstance(hmacSecretKey.getAlgorithm())
+        mac.init(hmacSecretKey)
+        return mac.doFinal(value.bytes)
     }
 
     private boolean isValidHmac(final String value, final String hmac) {
-        final byte[] result = calculateHmac(value);
-        final byte[] input = decode(hmac);
-        return Arrays.equals(result, input);
+        if (value && hmac) {
+            byte[] result = calculateHmac(value)
+            byte[] input = decode(hmac)
+            Arrays.equals(result, input)
+        } else {
+            false
+        }
     }
 
     protected SecretKey createSecretKey(final String algorithm, final String base64encodedKey) {
-        final byte[] keyBytes = decode(base64encodedKey);
-        return new SecretKeySpec(keyBytes, algorithm);
+        assert base64encodedKey
+
+        byte[] keyBytes = decode(base64encodedKey)
+        return new SecretKeySpec(keyBytes, algorithm)
     }
 
     private byte[] decode(final String data) {
-        return Base64.decodeBase64(data);
+        return Base64.decodeBase64(data)
     }
 
     private String encode(final byte[] data) {
-        new Base64(-1, null, true).encodeToString(data);
+        new Base64(-1, null, true).encodeToString(data)
     }
 }

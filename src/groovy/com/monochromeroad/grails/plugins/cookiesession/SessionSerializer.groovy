@@ -9,24 +9,22 @@ import org.slf4j.Logger
 import org.codehaus.groovy.grails.commons.GrailsApplication
 
 /**
- * Created with IntelliJ IDEA.
- * User: masatoshi
- * Date: 12/03/02
- * Time: 2:20
- * To change this template use File | Settings | File Templates.
+ * Session Serializer
+ *
+ * @author Masatoshi Hayashi
  */
 class SessionSerializer {
 
-    GrailsApplication grailsApplication
+    def grailsApplication
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    SessionSerializer(GrailsApplication grailsApplication) {
+    SessionSerializer(grailsApplication) {
         this.grailsApplication = grailsApplication
     }
 
     String serialize(Serializable serializable) {
-        ByteArrayOutputStream byteArrayOut = new ByteArrayOutputStream();
+        ByteArrayOutputStream byteArrayOut = new ByteArrayOutputStream()
         //noinspection GroovyMissingReturnStatement
         new GZIPOutputStream(byteArrayOut).withObjectOutputStream {
             it.writeObject(serializable)
@@ -35,38 +33,37 @@ class SessionSerializer {
     }
 
     Object deserialize(String source) {
-        byte[] decoded = decode(source);
+        byte[] decoded = decode(source)
 
         try {
             ObjectInputStream stream = getSessionInputStream(decoded)
-            return stream.readObject();
+            return stream.readObject()
         } catch (Exception e) {
-            log.warn("exception on reading a cookie session", e);
+            log.warn("exception on reading a cookie session", e)
             return null
         }
     }
 
     private ObjectInputStream getSessionInputStream(byte[] source) {
-        InputStream loadingStream = new GZIPInputStream(new ByteArrayInputStream(source));
+        InputStream loadingStream = new GZIPInputStream(new ByteArrayInputStream(source))
         return new ObjectInputStream(loadingStream) {
             @Override
             public Class resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
                 //noinspection GroovyUnusedCatchParameter
                 try {
-                    return grailsApplication.classLoader.loadClass(desc.getName());
+                    return grailsApplication.classLoader.loadClass(desc.getName())
                 } catch (ClassNotFoundException ex) {
-                    return Class.forName(desc.getName());
+                    return Class.forName(desc.getName())
                 }
             }
-        };
+        }
     }
 
-    private byte[] decode(final String sessionData) {
-        return Base64.decodeBase64(sessionData);
+    private byte[] decode(final String data) {
+        return Base64.decodeBase64(data)
     }
 
-    private String encode(final byte[] serializedBytes) {
-        new Base64(-1, null, true).encodeToString(serializedBytes);
+    private String encode(final byte[] data) {
+        new Base64(-1, null, true).encodeToString(data)
     }
-
 }

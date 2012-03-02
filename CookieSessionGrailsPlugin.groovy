@@ -49,9 +49,6 @@ class CookieSessionGrailsPlugin {
             'filter-mapping' {
                 'filter-name'('sessionProxyFilter')
                 'url-pattern'('/*')
-                'dispatcher'('ERROR')
-                'dispatcher'('FORWARD')
-                'dispatcher'('REQUEST')
             }
         }
     }
