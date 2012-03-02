@@ -7,8 +7,6 @@ import javax.servlet.http.HttpServletResponse
 import javax.crypto.spec.SecretKeySpec
 import javax.crypto.Mac
 
-import org.apache.commons.codec.binary.Base64
-
 /**
  * Session Cookie Repository
  *
@@ -71,7 +69,7 @@ class SessionRepository {
             cookie.setValue(serialized)
             response.addCookie(cookie)
             Cookie hmacCookie = createCookie(hmacKey)
-            hmacCookie.setValue(encode(calculateHmac(serialized)))
+            hmacCookie.setValue(calculateHmac(serialized).encodeBase64().toString())
             response.addCookie(hmacCookie)
         }
     }
@@ -113,7 +111,7 @@ class SessionRepository {
     private boolean isValidHmac(final String value, final String hmac) {
         if (value && hmac) {
             byte[] result = calculateHmac(value)
-            byte[] input = decode(hmac)
+            byte[] input = hmac.decodeBase64()
             Arrays.equals(result, input)
         } else {
             false
@@ -123,15 +121,8 @@ class SessionRepository {
     protected SecretKey createSecretKey(final String algorithm, final String base64encodedKey) {
         assert base64encodedKey
 
-        byte[] keyBytes = decode(base64encodedKey)
+        byte[] keyBytes = base64encodedKey.decodeBase64()
         return new SecretKeySpec(keyBytes, algorithm)
     }
 
-    private byte[] decode(final String data) {
-        return Base64.decodeBase64(data)
-    }
-
-    private String encode(final byte[] data) {
-        new Base64(-1, null, true).encodeToString(data)
-    }
 }

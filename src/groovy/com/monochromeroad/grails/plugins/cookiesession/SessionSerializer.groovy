@@ -1,12 +1,9 @@
 package com.monochromeroad.grails.plugins.cookiesession
 
 import java.util.zip.GZIPOutputStream
-
-import org.apache.commons.codec.binary.Base64
 import java.util.zip.GZIPInputStream
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
-import org.codehaus.groovy.grails.commons.GrailsApplication
 
 /**
  * Session Serializer
@@ -29,11 +26,11 @@ class SessionSerializer {
         new GZIPOutputStream(byteArrayOut).withObjectOutputStream {
             it.writeObject(serializable)
         }
-        encode(byteArrayOut.toByteArray())
+        byteArrayOut.toByteArray().encodeBase64()
     }
 
     Object deserialize(String source) {
-        byte[] decoded = decode(source)
+        byte[] decoded = source.decodeBase64()
 
         try {
             ObjectInputStream stream = getSessionInputStream(decoded)
@@ -57,13 +54,5 @@ class SessionSerializer {
                 }
             }
         }
-    }
-
-    private byte[] decode(final String data) {
-        return Base64.decodeBase64(data)
-    }
-
-    private String encode(final byte[] data) {
-        new Base64(-1, null, true).encodeToString(data)
     }
 }
