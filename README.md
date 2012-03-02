@@ -27,11 +27,6 @@ The plugin can be configured in "Config.groovy".
        <td>If false, the plugin won't be loaded.</td>
     </tr>
     <tr>
-       <td>grails.plugin.cookiesession.hmac.secret</td>
-       <td>-</td>
-       <td>A secret key used for calculation of an HMAC. This value is required. Be sure to make this secret key unique for every application.</td>
-    </tr>
-    <tr>
        <td>grails.plugin.cookiesession.id</td>
        <td>gsession</td>
        <td>The cookie's name used for storing session data.</td>
@@ -42,14 +37,19 @@ The plugin can be configured in "Config.groovy".
        <td>Session timeout (minutes)</td>
     </tr>
     <tr>
+       <td>grails.plugin.cookiesession.hmac.secret</td>
+       <td>- <strong>(Required)</strong></td>
+       <td>A secret key used for preventing a session cookie from being forged. It's should be kept private and unique.</td>
+    </tr>
+    <tr>
        <td>grails.plugin.cookiesession.hmac.id</td>
        <td>gsesshmac</td>
-       <td>The cookie's name used for storing session an HMAC.</td>
+       <td>The cookie's name used for storing a session HMAC.</td>
     </tr>
     <tr>
        <td>grails.plugin.cookiesession.hmac.algorithm</td>
        <td>HmacSHA1</td>
-       <td>An algorithm name used for calculation of an HMAC.</td>
+       <td>An algorithm used for an HMAC.</td>
     </tr>
   </tbody>
 </table>
