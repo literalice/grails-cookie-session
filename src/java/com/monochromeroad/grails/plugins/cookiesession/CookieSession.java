@@ -43,7 +43,7 @@ public class CookieSession  implements HttpSession, Serializable {
     boolean valid;
 
     /** the time for Session Timeout */
-    transient int maxInactiveInterval = 30 * 60;
+    transient int maxInactiveInterval;
 
     transient ServletContext servletContext;
 
@@ -208,8 +208,12 @@ public class CookieSession  implements HttpSession, Serializable {
             return false;
         }
 
-        long timeout = System.currentTimeMillis() - getLastAccessedTime();
-        return timeout - maxInactiveInterval * 1000 > 0;
+        long meantime = System.currentTimeMillis() - getLastAccessedTime();
+        boolean isTimeout = meantime - maxInactiveInterval * 1000 > 0;
+        if(isTimeout) {
+            invalidate();
+        }
+        return isTimeout;
     }
 
 }

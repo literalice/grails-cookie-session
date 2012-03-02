@@ -14,26 +14,36 @@ class SessionProxyFilter extends OncePerRequestFilter {
 
     private static final String DEFAULT_SESSION_ID = "gssession"
 
+    private static final int DEFAULT_SESSION_TIMEOUT = 30
+
     private static final String DEFAULT_HMAC_ID = "gsesshmac"
 
     private static final String DEFAULT_HMAC_ALGORITHM = "HmacSHA1"
 
     def grailsApplication
 
-    def hmapOption
-
     def sessionId
+
+    def sessionTimeoutSecond
+
+    def hmapOption
 
     @Override
     protected void initFilterBean() {
         hmapOption = loadHmapOption()
         sessionId = loadSessionId()
+        sessionTimeoutSecond = loadSessionTimeout()
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) {
         CookieSessionRequestWrapper wrapper = new CookieSessionRequestWrapper(request, response)
         chain.doFilter(wrapper, response)
+    }
+
+    private loadSessionTimeout() {
+        def config = grailsApplication.config.grails.plugin.cookiesession
+        ((config.timeout) ?: DEFAULT_SESSION_TIMEOUT) * 60
     }
 
     private loadSessionId() {
@@ -59,7 +69,7 @@ class SessionProxyFilter extends OncePerRequestFilter {
 
         private CookieSession cookieSession
 
-        CookieSessionRequestWrapper(HttpServletRequest request, HttpServletResponse response) {
+        private CookieSessionRequestWrapper(HttpServletRequest request, HttpServletResponse response) {
             super(request)
             def app = SessionProxyFilter.this.grailsApplication
             def sessionId = SessionProxyFilter.this.sessionId
@@ -75,20 +85,20 @@ class SessionProxyFilter extends OncePerRequestFilter {
 
         @Override
         HttpSession getSession(final boolean create) {
+            def result = null
             if (cookieSession) {
-                return cookieSession
-            }
-
-            cookieSession = repository.find()
-            if (cookieSession) {
-                return cookieSession
-            }
-
-            if (create) {
-                return new CookieSession(repository)
+                result = cookieSession
             } else {
-                return null
+                result = repository.find()
+                if (!result && create) {
+                    result = new CookieSession(repository)
+                }
             }
+
+            if (result) {
+                result.maxInactiveInterval = SessionProxyFilter.this.sessionTimeoutSecond
+            }
+            return result
         }
 
     }
