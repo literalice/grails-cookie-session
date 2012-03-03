@@ -1,16 +1,38 @@
 # The cookie based session storage for Grails
 
-This is the grails plugin that allows you to store the session data in a cookie like Rails or Play!.
+This is the grails plugin that allows you to store the session data in a cookie like Rails or Play!.<br />
+It makes a grails application more stateless. So you could more easily scale the application on a clustered environment (including some cloud platforms like Heroku).
 
 # Installation
 
-Clone the plugin's source, and use it as a grails inline plugin.
+## Repository for the plugin
+
+You need to specify a repository for the plugin inside the grails-app/conf/BuildConfig.groovy file.
+
+Repository URL: `http://literalice.github.com/maven-repo/releases`
+
+    grails.project.dependency.resolution = {
+        // ...
+        repositories {
+            inherits true // Whether to inherit repository definitions from plugins
+            // ...
+            mavenRepo "http://literalice.github.com/maven-repo/releases"
+        }
+    }
+
+
+## Installation Command
+
+After specifying the repository, you can install the plugin by the grails `install-plugin` command.
+
+`grails install-plugin cookie-session`
+
 
 # Issues
 
 ## Replay attacks
 
-You should be aware of the replay attacks when you use the cookie based session store.
+You should be aware of the replay attacks when you use the cookie based session store.<br />
 Even if someone sniffs a user's cookie, and replay the cookie to your application, the application cannot detect this. (they may log in to your application or ...).
 
 ## Session data size
