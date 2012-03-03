@@ -13,3 +13,5 @@ stacktrace.log
 *.iml
 *.ipr
 *.iws
+*.tld
+
