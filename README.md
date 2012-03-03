@@ -21,7 +21,7 @@ Repository URL: `http://literalice.github.com/maven-repo/releases`
     }
 
 
-## Installation Command
+## Installing the plugin
 
 After specifying the repository, you can install the plugin by the grails `install-plugin` command.
 
