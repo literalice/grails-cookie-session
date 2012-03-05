@@ -125,7 +125,7 @@ class SessionProxyFilter extends OncePerRequestFilter {
             if (cookieSession != null) {
                 result = cookieSession;
             } else {
-                result = repository.find();
+                result = repository.find(SessionProxyFilter.this.sessionTimeoutSecond);
                 if (result == null && create) {
                     result = new CookieSession(repository);
                     cookieSession = result;

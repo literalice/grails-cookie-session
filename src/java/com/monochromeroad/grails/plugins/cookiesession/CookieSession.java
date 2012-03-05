@@ -103,7 +103,6 @@ public class CookieSession  implements HttpSession, Serializable {
         if (!isValidSession()) {
             return null;
         }
-        this.lastAccessedTime = System.currentTimeMillis();
         return this.attributes.get(s);
     }
 
@@ -111,7 +110,7 @@ public class CookieSession  implements HttpSession, Serializable {
         return getAttribute(s);
     }
 
-    public Enumeration getAttributeNames() {
+    public Enumeration<String> getAttributeNames() {
         Map<String, Serializable> currentAttributes = new HashMap<String, Serializable>();
         if (isValidSession()) {
             currentAttributes = attributes;
@@ -184,7 +183,7 @@ public class CookieSession  implements HttpSession, Serializable {
         return valid && !isSessionTimeout();
     }
 
-    private boolean isSessionTimeout() {
+    public boolean isSessionTimeout(int maxInactiveInterval) {
         if (maxInactiveInterval < 0) {
             return false;
         }
@@ -195,6 +194,10 @@ public class CookieSession  implements HttpSession, Serializable {
             invalidate();
         }
         return isTimeout;
+    }
+
+    private boolean isSessionTimeout() {
+        return isSessionTimeout(maxInactiveInterval);
     }
 
 }

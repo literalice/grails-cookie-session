@@ -42,21 +42,25 @@ class SessionRepository {
         hmacSecretKey = createSecretKey(hmacAlgorithm, hmacSecret)
     }
 
-    CookieSession find() {
+    @SuppressWarnings("GroovyVariableNotAssigned")
+    CookieSession find(int maxInterval) {
         Cookie sessionCookie = findCookie(key)
         Cookie hmacCookie = findCookie(hmacKey)
         if (sessionCookie && hmacCookie) {
             if (!isValidHmac(sessionCookie.value, hmacCookie.value)) {
-                delete()
                 return null
             }
             CookieSession session = new CookieSession(this)
             CookieSession beforeSession = serializer.deserialize(sessionCookie.value) as CookieSession
-            session.creationTime = beforeSession.creationTime
-            session.lastAccessedTime = beforeSession.lastAccessedTime
-            session.attributes = beforeSession.attributes
-            session.newSession = false
-            return session
+            if (beforeSession && !beforeSession.isSessionTimeout(maxInterval)) {
+                session.creationTime = beforeSession.creationTime
+                session.lastAccessedTime = System.currentTimeMillis()
+                session.attributes = beforeSession.attributes
+                session.newSession = false
+                return session
+            } else {
+                return null
+            }
         } else {
             return null
         }
