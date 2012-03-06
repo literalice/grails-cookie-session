@@ -52,6 +52,7 @@ class SessionRepository {
             }
             CookieSession session = new CookieSession(this)
             CookieSession beforeSession = serializer.deserialize(sessionCookie.value) as CookieSession
+            beforeSession.repository = this
             if (beforeSession && !beforeSession.isSessionTimeout(maxInterval)) {
                 session.creationTime = beforeSession.creationTime
                 session.lastAccessedTime = System.currentTimeMillis()

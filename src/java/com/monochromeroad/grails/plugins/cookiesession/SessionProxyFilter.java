@@ -112,6 +112,8 @@ class SessionProxyFilter extends OncePerRequestFilter {
             Map<String, String> hmapOption = SessionProxyFilter.this.hmapOption;
             SessionSerializer serializer = new SessionSerializer(app);
             repository = new SessionRepository(sessionId, request, response, serializer, hmapOption);
+
+            cookieSession = repository.find(SessionProxyFilter.this.sessionTimeoutSecond);
         }
 
         @Override
@@ -121,21 +123,14 @@ class SessionProxyFilter extends OncePerRequestFilter {
 
         @Override
         public HttpSession getSession(final boolean create) {
-            CookieSession result;
-            if (cookieSession != null) {
-                result = cookieSession;
-            } else {
-                result = repository.find(SessionProxyFilter.this.sessionTimeoutSecond);
-                if (result == null && create) {
-                    result = new CookieSession(repository);
-                    cookieSession = result;
-                }
+            if (cookieSession == null && create) {
+                cookieSession = new CookieSession(repository);
             }
 
-            if (result != null) {
-                result.maxInactiveInterval = SessionProxyFilter.this.sessionTimeoutSecond;
+            if (cookieSession != null) {
+                cookieSession.maxInactiveInterval = SessionProxyFilter.this.sessionTimeoutSecond;
             }
-            return result;
+            return cookieSession;
         }
 
     }
