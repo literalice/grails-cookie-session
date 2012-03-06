@@ -60,7 +60,7 @@ class SessionProxyFilter extends OncePerRequestFilter {
         if (timeout == null) {
             return DEFAULT_SESSION_TIMEOUT * 60;
         } else {
-            return timeout;
+            return timeout * 60;
         }
     }
 
