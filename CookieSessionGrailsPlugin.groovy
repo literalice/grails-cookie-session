@@ -11,7 +11,7 @@ class CookieSessionGrailsPlugin {
     def title = "Cookie Session Plugin" // Headline display name of the plugin
     def author = "Masatoshi Hayashi"
     def authorEmail = "literalice@monochromeroad.com"
-    def description = "This plugin allow you to store session data in a cookie"
+    def description = "This plugin allows you to store the session data in a cookie"
 
     // URL to the plugin's documentation
     def documentation = "http://grails.org/plugin/cookie-session"
