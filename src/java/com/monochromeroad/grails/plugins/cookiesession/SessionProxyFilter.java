@@ -17,7 +17,7 @@ import java.util.Map;
  *
  * @author Masatoshi Hayashi
  */
-class SessionProxyFilter extends OncePerRequestFilter {
+public class SessionProxyFilter extends OncePerRequestFilter {
 
     private static final String DEFAULT_SESSION_ID = "gssession";
 
