@@ -5,25 +5,7 @@ It makes a grails application more stateless. So you could more easily scale the
 
 # Installation
 
-## Repository for the plugin
-
-You need to specify a repository for the plugin inside the grails-app/conf/BuildConfig.groovy file.
-
-Repository URL: `http://literalice.github.com/maven-repo/releases`
-
-    grails.project.dependency.resolution = {
-        // ...
-        repositories {
-            inherits true // Whether to inherit repository definitions from plugins
-            // ...
-            mavenRepo "http://literalice.github.com/maven-repo/releases"
-        }
-    }
-
-
-## Installing the plugin
-
-After specifying the repository, you can install the plugin by the grails `install-plugin` command.
+You can install the plugin by the grails `install-plugin` command.
 
 `grails install-plugin cookie-session`
 
