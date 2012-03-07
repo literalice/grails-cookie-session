@@ -54,7 +54,7 @@ The plugin can be configured in "Config.groovy".
     <tr>
        <td>grails.plugin.cookiesession.hmac.secret</td>
        <td>- <strong>(Required)</strong></td>
-       <td>A secret key used for preventing a session cookie from being forged. It's should be kept private and unique.</td>
+       <td>A secret key used for preventing a session cookie from being forged. It should be kept private and unique.</td>
     </tr>
     <tr>
        <td>grails.plugin.cookiesession.hmac.id</td>
